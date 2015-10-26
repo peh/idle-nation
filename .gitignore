@@ -52,3 +52,4 @@ project.xcworkspace
 
 # release files
 /dist
+/.publish

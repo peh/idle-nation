@@ -3,6 +3,7 @@
 var gulp = require('gulp'),
   less = require('gulp-less'),
   csso = require('gulp-csso'),
+  ghPages = require('gulp-gh-pages'),
   autoprefixer = require('gulp-autoprefixer'),
   browserify = require('browserify'),
   watchify = require('watchify'),
@@ -133,8 +134,19 @@ gulp.task('rename-index', function() {
     .pipe(gulp.dest("deploy/"));
 });
 
+gulp.task('gh-release', function(){
+  gulp.task('deploy', function() {
+  return gulp.src(['./dist/**/*'])
+    .pipe(ghPages());
+  });
+})
+
+gulp.task('test-deploy', ['clean','browserify', 'styles', 'fonts'], function(){
+  return gulp.src('./dist/**/*')
+    .pipe(ghPages());
+})
+
 gulp.task('deploy', function() {
   process.env.NODE_ENV = 'production';
-  // TODO: create deployment pipeline with ghpages?
-  // return runsequence('clean', ['browserify', 'styles', 'fonts'], 'prepare-assets', 'rename-index', 'zip', 's3-upload');
+  return runsequence('clean', ['browserify', 'styles', 'fonts'], 'gh-release');
 });
