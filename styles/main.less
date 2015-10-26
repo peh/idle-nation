@@ -1,0 +1,77 @@
+@import "../node_modules/skeleton-less/less/skeleton";
+@import "statusbar";
+@import "sidebar";
+@import "icons";
+@import url(https://fonts.googleapis.com/css?family=Montserrat:400,700);
+
+body, html {
+  font-family: 'Montserrat', sans-serif !important;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+div#game-container {
+  padding-left: 10px;
+  padding-right: 10px
+}
+
+div.container {
+  width: 100vw;
+  min-width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+
+  div.content {
+    flex-grow: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-left: 5px;
+
+    div.content-container {
+      flex-grow: 20;
+    }
+  }
+}
+
+
+.build-overview {
+  display: flex;
+  .list {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    .list-row {
+      cursor: pointer;
+    }
+  }
+
+  .info {
+    flex-grow: 6;
+  }
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  &:hover {
+    color: @secondary-color;
+    border-color: @border-color;
+  }
+}
+
+dl.horizontal {
+  dt {
+    float: left;
+  }
+  dd {
+    margin-left: 150px;
+  }
+}

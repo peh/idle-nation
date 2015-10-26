@@ -1,0 +1,6 @@
+{
+"js":{
+  "break_chained_methods" = false,
+  "indent_size": 4,
+  "indent_char": " "}
+}
