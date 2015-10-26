@@ -1,8 +1,0 @@
-{
-  "undef": true,
-  "unused": true,
-  "node": true,
-  "esnext": true,
-  "asi": true,
-  "predef": [ "superagent", "window", "emitter", "document" ]
-}
