@@ -2,43 +2,23 @@ var keyMirror = require('keymirror')
 
 export const InhabitantActions = keyMirror({
   ADD_INHABITANT: null,
-  UPDATE_INHABITANT: null,
-  INCREASE_INHABITANT: null,
-  DECREASE_INHABITANT: null
+  CHANGE_INHABITANT_COUNT: null
 })
 
-export function addInhabitant(building) {
+export function addInhabitant(inhabitant) {
   return {
     type: InhabitantActions.ADD_INHABITANT,
-    building
+    inhabitant
   }
 }
 
-export function updateInhabitant(building) {
-  return {
-    type: InhabitantActions.UPDATE_INHABITANT,
-    building
-  }
-}
-
-export function increaseInhabitantCount(type, amount) {
+export function changeInhabitantCount(type, amount) {
   let command = {
     type: type,
     amount: amount
   }
   return {
-    type: InhabitantActions.INCREASE_INHABITANT,
-    command
-  }
-}
-
-export function decreaseInhabitantCount(type, amount) {
-  let command = {
-    type: type,
-    amount: amount
-  }
-  return {
-    type: InhabitantActions.DECREASE_INHABITANT,
+    type: InhabitantActions.CHANGE_INHABITANT_COUNT,
     command
   }
 }

@@ -1,13 +1,17 @@
 .sidebar {
-  flex-grow: 3;
+  flex-grow: 1;
   margin: 0;
   padding-top: 10px;
-  box-shadow: 1px 0px 2px #aaa;
+  border-right: 1px solid #aaa;
   font-size: 14pt;
   max-width: 300px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  .top {
+    display: flex;
+    flex-direction: column;
+  }
   ul {
     list-style: none;
     li {
@@ -15,6 +19,12 @@
       &::before {
         margin-right: 5px;
       }
+      button {
+        margin-right: 5px;
+      }
     }
+  }
+  a {
+    color: #000;
   }
 }

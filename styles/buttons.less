@@ -1,0 +1,12 @@
+@import "variables";
+
+button {
+  &.danger {
+    color: @danger-color;
+    background-color: @danger-background;
+    border-color: @danger-border;
+    &:hover {
+      background-color: darken(@danger-background, 10%);
+    }
+  }
+}

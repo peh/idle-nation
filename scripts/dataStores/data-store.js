@@ -19,4 +19,8 @@ export default class DataStore{
     this._data = data
     this._persist(this._data)
   }
+
+  wipe() {
+    this._wipe()
+  }
 }

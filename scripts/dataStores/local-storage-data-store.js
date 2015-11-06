@@ -15,4 +15,8 @@ export default class LocalStoreDataStore extends DataStore {
     window.localStorage.setItem(BASE_KEY, JSON.stringify(data))
   }
 
+  _wipe() {
+    window.localStorage.setItem(BASE_KEY, null)
+  }
+
 }

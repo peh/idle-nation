@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   "lumberjack": {
     provided: 1,
     name: "Lumberjack",
@@ -10,6 +10,9 @@ export default {
     costs: [{
       type: 'wood',
       amount: 50
+    }, {
+      type: 'gold',
+      amount: 50
     }]
   },
   "fisherman": {
@@ -17,12 +20,15 @@ export default {
     name: "Fisherman",
     produces: [{
       type: 'fish',
-      amount: 0.1
+      amount: 1
     }],
     needs: [],
     costs: [{
       type: 'wood',
-      amount: 50
+      amount: 100
+    }, {
+      type: 'gold',
+      amount: 100
     }]
   },
   "stonemason": {
@@ -36,6 +42,9 @@ export default {
     costs: [{
       type: 'wood',
       amount: 150
+    }, {
+      type: 'gold',
+      amount: 250
     }]
   }
 }

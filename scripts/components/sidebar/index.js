@@ -29,23 +29,24 @@ export default class Sidebar extends React.Component {
     let foodRows = this._createRows(gameData.foods)
     return (
       <div className="sidebar">
-        <div>
-          <h4>Materials</h4>
-          <ul className="materials">
-            {materialRows}
-          </ul>
+        <div className="top">
+          <h3>IdleNation <small><a href="https://github.com/peh/idle-nation" target="_blank"><i className="fa fa-github"></i></a></small></h3>
+          <div>
+            <h4>Materials</h4>
+            <ul className="materials">
+              {materialRows}
+            </ul>
+          </div>
+          <div>
+            <h4>Food</h4>
+            <ul className="food">
+              {foodRows}
+            </ul>
+          </div>
         </div>
-        <div>
-          <h4>Food</h4>
-          <ul className="food">
-            {foodRows}
-          </ul>
-        </div>
-
         <ul>
-          <li>github</li>
-          <li><button onClick={this.props.onSave}>Save</button></li>
-          <li><button onClick={this.props.onPause}>{pauseText}</button></li>
+          <li><button onClick={this.props.onSave}>Save</button><button onClick={this.props.onPause}>{pauseText}</button></li>
+          <li><button onClick={this.props.onReset}>Reset</button><button className="danger" onClick={this.props.onWipe}>Wipe</button></li>
         </ul>
       </div>
     )

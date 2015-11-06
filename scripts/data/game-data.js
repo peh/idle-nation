@@ -1,4 +1,4 @@
 export default {
-  "materials": ['wood', 'stone'],
-  "foods": ['fish']
+  "materials": ['gold', 'wood', 'stone'],
+  "foods": ['fish'],
 }

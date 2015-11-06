@@ -14,8 +14,13 @@ import {
   MeActions
 }
 from './actions/me-actions'
+import {
+  HouseActions
+}
+from './actions/house-actions'
 import Material from './models/material'
 import Building from './models/building'
+import House from './models/house'
 import Inhabitant from './models/inhabitant'
 import Me from './models/me'
 import Setting from './models/setting'
@@ -59,12 +64,30 @@ function buildingReducer(action, buildings = {}) {
       newBuildings = newBuildings.set(b.type, new Building(b.type, b.amount))
       break
     case BuildingActions.INCREASE_BUILDING:
-      let building = newBuildings.get(action.command.type)
-      let newBuilding = new Building(action.command.type, ((building.amount || 0) + action.command.amount))
-      newBuildings = newBuildings.set(action.command.type, newBuilding)
+      let known = newBuildings.get(action.command.type)
+      let building = new Building(action.command.type, ((known.amount || 0) + action.command.amount))
+      newBuildings = newBuildings.set(action.command.type, building)
       break
   }
   return newBuildings.toJSON()
+}
+
+function houseReducer(action, houses = {}) {
+  let result = Immutable.fromJS(houses).toMap()
+  switch (action.type) {
+    case HouseActions.ADD_HOUSE:
+      let data = action.house
+      result = result.set(data.type, new House(data.type, data.amount))
+      break
+    case HouseActions.CHANGE_HOUSE_COUNT:
+      let type = action.command.type
+      let change = action.command.amount
+      let current = result.get(action.command.type)
+      let house = new House(type, (current.amount + change))
+      result = result.set(type, house)
+      break
+  }
+  return result.toJSON()
 }
 
 function inhabitantReducer(action, inhabitants = {}) {
@@ -73,6 +96,14 @@ function inhabitantReducer(action, inhabitants = {}) {
     case InhabitantActions.ADD_INHABITANT:
       let i = action.inhabitant
       map = map.set(i.type, new Inhabitant(i.type, i.amount))
+      break
+    case InhabitantActions.CHANGE_INHABITANT_COUNT:
+      let type = action.command.type
+      let change = action.command.amount
+      let current = map.get(action.command.type)
+      let inhabitant = new Inhabitant(type, (current.amount + change))
+      map = map.set(type, inhabitant)
+      break
   }
   return map.toJSON()
 }
@@ -118,6 +149,7 @@ const idleNationApp = function(state = {}, action) {
     materials: materialsReducer(action, state.materials),
     buildings: buildingReducer(action, state.buildings),
     inhabitants: inhabitantReducer(action, state.inhabitants),
+    houses: houseReducer(action, state.houses),
     app: appReducer(action, state.app),
     route: routingReducer(action, state.route),
     me: meReducer(action, state.me)

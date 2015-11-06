@@ -28,6 +28,10 @@ class App {
     }
   }
 
+  wipe(){
+    this.dataStore.wipe()
+  }
+
   init() {
     this.processor.start()
   }
@@ -45,5 +49,8 @@ class App {
 const app = new App()
 window.onload = () => {
   app.init()
-  ReactDOM.render((<Provider store={app.store}><Main application={app}/></Provider>), document.getElementById('game-container'));
+  ReactDOM.render(<Provider store={app.store}><Main application={app}/></Provider>, document.getElementById('game-container'));
+}
+window.onunload = () => {
+  app.processor.save()
 }

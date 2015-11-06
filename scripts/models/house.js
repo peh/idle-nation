@@ -1,15 +1,12 @@
-const data = require("../data/building-data")
+const DATA = require("../data/house-data")
 import * as _ from 'lodash'
-export default class Building {
+
+export default class House {
   constructor(type, amount) {
     this.type = type
     this.amount = amount
-  }
-
-  _getData(){
-
-    return _.find(data, (d, type)=>{
-      return type === this.type
+    this.data = _.find(DATA, (ignored, d) => {
+      return d === type
     })
   }
 
@@ -17,20 +14,12 @@ export default class Building {
     return this.amount > 0 || this.canBuild(materials)
   }
 
-  getNeeds(){
-    return this._getData().needs || []
-  }
-
-  getProduces(){
-    return this._getData().produces || []
-  }
-
   getCosts(){
-    return this._getData().costs || []
+    return this.data.costs
   }
 
   getName(){
-    return this._getData().name
+    return this.data.name
   }
 
   canBuild(materials){
@@ -44,5 +33,9 @@ export default class Building {
       }
     })
     return result
+  }
+
+  getHosts(){
+    return this.data.hosts
   }
 }
