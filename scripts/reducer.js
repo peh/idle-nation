@@ -26,34 +26,40 @@ import Me from './models/me'
 import Setting from './models/setting'
 import * as Immutable from 'immutable'
 
+function round(num) {
+  return Math.round(num * 10000) / 10000
+}
 
 function materialsReducer(action, materials = {}) {
-  let newMaterials = Immutable.fromJS(materials).toMap()
+  let result = Immutable.fromJS(materials).toMap()
   switch (action.type) {
     case MaterialActions.ADD_MATERIAL:
-    case MaterialActions.UPDATE_MATERIAL:
       let md = action.material
-      newMaterials = newMaterials.set(md.type, new Material(md.type, md.amount))
+      result = result.set(md.type, new Material(md.type, round(md.amount), round(md.perTick)))
       break
-    case MaterialActions.INCREASE_MATERIAL:
-      let material = newMaterials.get(action.command.type)
-      let newMaterial
-      if (!material) {
-        newMaterial = new Material(action.command.type, action.command.amount)
+    case MaterialActions.UPDATE_MATERIAL:
+      let toUpdate = action.material
+      result = result.set(toUpdate.type, new Material(toUpdate.type, round(toUpdate.amount), round(toUpdate.perTick)))
+      break
+    case MaterialActions.UPDATE_TICK:
+      let cmd = action.command
+      result = result.set(cmd.type, new Material(cmd.type, result.get(cmd.type).amount, round(cmd.tick)))
+      break
+    case MaterialActions.CHANGE_MATERIAL_AMOUNT:
+      let known = result.get(action.command.type)
+      let tick = 0
+      let newAmount = 0
+        // debugger
+      if (known && known.amount) {
+        newAmount = known.amount + action.command.amount
+        tick = known.tick // we don't want to update the "tick" value
       } else {
-        let newAmount = Math.round((material.amount + action.command.amount) * 100) / 100
-        newMaterial = new Material(action.command.type, newAmount)
+        newAmount = action.command.amount
       }
-
-      newMaterials = newMaterials.set(action.command.type, newMaterial)
-      break
-    case MaterialActions.DECREASE_MATERIAL:
-      let fromStore = newMaterials.get(action.command.type)
-      let newAmount = Math.round((fromStore.amount - action.command.amount) * 100) / 100
-      newMaterials = newMaterials.set(action.command.type, new Material(fromStore.type, newAmount))
+      result = result.set(action.command.type, new Material(action.command.type, Math.round((newAmount) * 10000) / 10000, tick))
       break
   }
-  return newMaterials.toJSON()
+  return result.toJSON()
 }
 
 function buildingReducer(action, buildings = {}) {
@@ -131,8 +137,9 @@ function appReducer(action, appState = {}) {
     }
     settings = settings.set(action.command.key, action.command.value)
     newState = newState.set('settings', settings)
+  } else if(action.type === 'UPDATE_LAST_TICK') {
+    newState = newState.set('lastTick', {lastTick: action.command.lastTick})
   }
-
   return newState.toJSON()
 }
 

@@ -9,4 +9,22 @@ button {
       background-color: darken(@danger-background, 10%);
     }
   }
+
+  &.success {
+    color: @success-color;
+    background-color: @success-background;
+    border-color: @success-border;
+    &:hover {
+      background-color: darken(@success-background, 10%);
+    }
+  }
+
+  &.info {
+    color: @info-color;
+    background-color: @info-background;
+    border-color: @info-border;
+    &:hover {
+      background-color: darken(@info-background, 10%);
+    }
+  }
 }

@@ -7,5 +7,8 @@ export default {
   },
   "gold": {
     name: "Gold"
+  },
+  "stone": {
+    name: "Stone"
   }
 }

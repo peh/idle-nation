@@ -1,4 +1,31 @@
+// base
+@container-background: #fff;
+
+
+//navbar
+
+@navbar-height: 50px;
+@navbar-base: #aaa;
+@navbar-color: darken(@navbar-base, 10%);
+@navbar-hover-color: darken(@navbar-base, 30%);
+@navbar-active-color: lighten(@navbar-base, 40%);
+@navbar-border: @navbar-base;
+@navbar-hover-border: @navbar-hover-color;
+@navbar-active-border: darken(@navbar-border, 20%);
+@navbar-tab-inactive-background: #eee;
+@navbar-transition: 0.2s;
+// states
 @danger-base: #df5959;
 @danger-color: #fff;
 @danger-background: lighten(@danger-base, 15%);
 @danger-border: lighten(@danger-base, 5%);
+
+@success-base: #36d033;
+@success-color: #fff;
+@success-background: lighten(@success-base, 15%);
+@success-border: lighten(@success-base, 5%);
+
+@info-base: #33bdd0;
+@info-color: #fff;
+@info-background: lighten(@info-base, 15%);
+@info-border: lighten(@info-base, 5%);

@@ -1,0 +1,16 @@
+@import './node_modules/bootstrap/scss/bootstrap.scss';
+@import './node_modules/font-awesome/scss/font-awesome.scss';
+@import "../../node_modules/sweetalert/dist/sweetalert.css";
+@import "navbar";
+@import "icons";
+@import "overview";
+@import url(https://fonts.googleapis.com/css?family=Montserrat:400,700);
+$enable-flex: true;
+
+body, html {
+  font-family: 'Montserrat', sans-serif !important;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}

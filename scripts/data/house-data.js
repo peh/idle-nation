@@ -9,10 +9,7 @@ export default {
     }],
     costs: [{
       type: 'wood',
-      amount: 50
-    }, {
-      type: 'gold',
-      amount: 50
+      amount: 100
     }]
   }
 }

@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import {
   addMaterial,
-  increaseMaterial,
+  updateMaterial,
   decreaseMaterial
 }
 from './actions/material-actions'
@@ -16,7 +16,8 @@ import {
 }
 from './actions/inhabitant-actions'
 import {
-  changeSetting
+  changeSetting,
+  updateLastTick
 }
 from './actions/app-actions'
 import {
@@ -29,35 +30,54 @@ import {
 from './actions/house-actions'
 
 import * as Immutable from 'immutable'
-import * as BuildingData from './data/building-data.js'
-import * as InhabitantData from './data/inhabitant-data.js'
+import * as BUILDING_DATA from './data/building-data.js'
+import * as MATERIAL_DATA from './data/material-data.js'
+import * as INHABITANT_DATA from './data/inhabitant-data.js'
 import * as HOUSE_DATA from './data/house-data.js'
+import * as GAME_DATA from './data/game-data.js'
+import Material from './models/material'
 export default class Processor {
   constructor(app) {
     this._tickInterval = -1
     this._autosaveInterval = -1
     this.app = app
-
     this._init()
-      // this.app.dataStore.persist()
   }
 
   _init() {
 
-    Immutable.fromJS(this.app.dataStore.getAll()).forEach((v, k) => {
+    let fromStore = this.app.dataStore.getAll()
+    Immutable.fromJS(fromStore).forEach((v, k) => {
         let functionName = `_init_${k}`
         if (this[functionName] !== undefined) {
           this[functionName](v.toList().toJSON(), k)
         }
       })
-      // check that data for each buiding is present
+    this._initApp(fromStore.app)
+    // check that data for each buiding is present
     let currentBuildings = Immutable.fromJS(this.app.store.getState().buildings || {})
     let currentInhabitants = Immutable.fromJS(this.app.store.getState().inhabitants || {})
-    _.each(InhabitantData, (inhabitant, type) => {
+    let materials = Immutable.fromJS(this.app.store.getState().materials)
+    _.each(MATERIAL_DATA, (material, type) => {
       if (type === 'default') {
         return
       }
 
+      let fromCurrent = materials.find((i) => {
+        return i.type === type
+      })
+
+      if (fromCurrent === undefined) {
+        console.log(`${type} not found in save, creating`)
+        this._dispatch(addMaterial(new Material(type, 0, 0)))
+      }
+
+    })
+
+    _.each(INHABITANT_DATA, (inhabitant, type) => {
+      if (type === 'default') {
+        return
+      }
 
       let fromCurrent = currentInhabitants.find((i) => {
         return i.type === type
@@ -73,7 +93,7 @@ export default class Processor {
 
     })
 
-    _.each(BuildingData, (building, type) => {
+    _.each(BUILDING_DATA, (building, type) => {
       if (type === 'default') {
         return
       }
@@ -135,11 +155,12 @@ export default class Processor {
     this._initGenericList(data, addHouse)
   }
 
-  _init_app(data) {
-    _.each(data, (setting) => {
-      _.each(setting, (v, k) => {
-        this._dispatch(changeSetting(k, v))
-      })
+  _initApp(data) {
+    if(data.lastTick) {
+      this._dispatch(updateLastTick(data.lastTick.lastTick))
+    }
+    _.each(data.settings, (v, k) => {
+      this._dispatch(changeSetting(k, v))
     })
   }
 
@@ -157,26 +178,54 @@ export default class Processor {
   }
 
   _run() {
+
+
     let app = this._getState().app
-    let me = this._getState().me
     if (app.settings && app.settings.paused === true) {
+      // although we are paused, we will still log ticks, otherwise we would FF after pause has ended
+      this._dispatch(updateLastTick(new Date().getTime()))
       return
     }
-    let productsProduced = {
-      gold: 0
+    let lastTick = app.lastTick
+    if(lastTick !== undefined) {
+      lastTick = lastTick.lastTick
     }
+    const now = new Date().getTime()
+    if(now - lastTick > 2000){
+      let fastForwarded = 0
+      console.log("FastForwarding in time");
+      while(now - lastTick > 2000) {
+          this._tick()
+          lastTick += 1000
+          fastForwarded++
+      }
+      this._dispatch(changeSetting("fastForwarded", fastForwarded))
+    } else {
+      this._dispatch(changeSetting("fastForwarded", 0))
+    }
+    this._tick()
+    // console.log(`lastTick: ${lastTick.lastTick}`)
+    this._dispatch(updateLastTick(new Date().getTime()))
+  }
+
+  _tick() {
+    let me = this._getState().me
     let buildings = this._getState().buildings
     let houses = this._getState().houses
+    // create a clone of our material list that will be mutated by all the processing, and dispated again afterwards
+    let noTicks = {}
+    _.each(this._getState().materials, (material)=>{
+      noTicks[material.type] = new Material(material.type, material.amount, 0)
+    })
+
+
+    let materials = Immutable.fromJS(noTicks)
+    if(materials.size === 0){
+      return
+    }
     _.each(buildings, (building) => {
       if (building.amount > 0) {
-        for (var i = 0; i < building.amount; i++) {
-          if (this._checkNeeds(building)) {
-            _.each(this._produce(building), (amount, produced) => {
-              this._dispatch(increaseMaterial(produced, amount))
-              productsProduced[produced] = (productsProduced[produced] || 0) + amount
-            })
-          }
-        }
+        materials = building.produce(materials)
       }
     })
 
@@ -193,61 +242,41 @@ export default class Processor {
       })
     })
 
-    // let some people die! :D
+    // let some people die (and be born)! :D
     _.each(houseableInhabitants, (amount, type) => {
       let current = _.find(this._getState().inhabitants, (i) => {
         return i.type === type
       })
-      if(!current && amount > 0){
-        // looks like we need to create some
-        this._dispatch(addInhabitant(type, amount))
-      } else if(current && amount != current.amount){
-        // this could be both, breeding or dying
-        this._dispatch(changeInhabitantCount(type, (amount-current.amount)))
-      }
+      this._dispatch(changeInhabitantCount(type, (amount-current.amount)))
     })
 
     let inhabitants = this._getState().inhabitants
     _.each(inhabitants, (inhabitant) => {
-        _.times(inhabitant.amount, () => {
-          if (this._checkNeeds(inhabitant)) {
-            _.each(inhabitant.getNeeds(), (need) => {
-              this._dispatch(decreaseMaterial(need.type, need.amount))
-            })
-            this._dispatch(increaseMaterial('gold', inhabitant.getGoldProduced()))
-            productsProduced.gold += inhabitant.getGoldProduced()
-          }
-        })
-      })
-      // add stuff "Me" produces
+      materials = inhabitant.produce(materials)
+    })
+
+    // add stuff "Me" produces
     if (me && me.workplace) {
       let building = _.find(buildings, (b) => {
         return b.type === me.workplace.type
       })
-      if (building && this._checkNeeds(building)) {
-        _.each(this._produce(building), (amount, produced) => {
-          this._dispatch(increaseMaterial(produced, amount * 10))
-            // "Me" produces 10 times more
-            // amount = amount * 10
-            // productsProduced[produced] = (productsProduced[produced] || 0) + amount
-        })
-      }
+      materials = building.produceSingle(materials, GAME_DATA.meFactor)
     }
-    // dispatch all the produced products
-    // _.each(productsProduced, (amount, type) => {
-    // this._dispatch(increaseMaterial(type, amount))
-    // })
-
+    _.each(materials.toJSON(), (material) => {
+      this._dispatch(updateMaterial(material))
+    })
   }
 
 
-  _produce(building) {
+  _produce(building, perTick) {
     let produced = {}
     _.each(building.getNeeds(), (material) => {
       this._dispatch(decreaseMaterial(material.type, material.amount))
+      perTick[material.type] = (perTick[material.type] || 0) - material.amount
     })
     _.each(building.getProduces(), (material) => {
       produced[material.type] = (produced[material.type] || 0) + material.amount
+      perTick[material.type] = (perTick[material.type] || 0) + material.amount
     })
     return produced
   }
@@ -289,6 +318,7 @@ export default class Processor {
     this._autosaveInterval = setInterval(() => {
       this.save()
     }, 5000)
+    this._run()
   }
 
   stop() {

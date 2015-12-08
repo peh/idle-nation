@@ -3,18 +3,17 @@ import React, {
   PropTypes
 } from 'react';
 import {connect} from 'react-redux';
-import StatusBar from "./statusBar"
-import Sidebar from "./sidebar"
-import Overview from "./build/overview"
+import Navbar from "./navbar/navbar.jsx"
+import Overview from "./overview/overview.jsx"
+import Production from "./production/production.jsx"
+import Housing from "./production/housing.jsx"
 const pathToRegexp = require('path-to-regexp')
 import * as _ from 'lodash'
 import {changeSetting} from '../actions/app-actions'
-import {increaseBuildingCount} from '../actions/building-actions'
-import {changeHouseCount} from '../actions/house-actions'
-import {decreaseMaterial} from '../actions/material-actions'
 import {changeWorkplace} from '../actions/me-actions'
 import ReactTooltip from 'react-tooltip'
-// import {increaseMaterial} from '../actions/material-actions'
+const moment = require('moment')
+const swal = require('sweetalert')
 
 let Immutable = require('immutable')
 
@@ -23,26 +22,41 @@ class Main extends Component {
   constructor() {
     super()
 
-    this.buildingOverview = this.buildingOverview
-      .bind(this)
-    this._build = this._build
-      .bind(this)
-    this._changeMeWork = this._changeMeWork
-      .bind(this)
+    this.production = this.production.bind(this)
+    this.housing = this.housing.bind(this)
+    this.navigate = this.navigate.bind(this)
+    this._changeMeWork = this._changeMeWork.bind(this)
 
     this.routes = {
-      '/': this.buildingOverview,
-      '/buildings/:building': this.buildingOverview,
-      '/buildings/': this.buildingOverview,
-      404: this.buildingOverview
+      '/': this.production,
+      '/production': this.production,
+      '/production/:building': this.production,
+      '/production/': this.production,
+      '/housing': this.housing,
+      '/housing/:building': this.housing,
+      '/housing/': this.housing,
+      404: this.production
     }
 
   }
 
-  buildingOverview(building) {
+  navigate(route){
+    this.props.application.navigate(route)
+  }
+
+  production(building) {
+    this.currentController = "production"
     let props = this.props
     return (
-      <Overview me={props.me} houses={props.houses} buildings={props.buildings} materials={props.materials} application={props.application} selectedBuilding={building} build={this._build} changeMeWork={this._changeMeWork}/>
+      <Production dispatch={this.props.dispatch} navigate={this.navigate} me={props.me} houses={props.houses} buildings={props.buildings} materials={props.materials} application={props.application} selectedBuilding={building} build={this._build} changeMeWork={this._changeMeWork}/>
+    )
+  }
+
+  housing(building) {
+    this.currentController = "housing"
+    let props = this.props
+    return (
+      <Housing dispatch={this.props.dispatch} navigate={this.navigate} me={props.me} houses={props.houses} buildings={props.buildings} materials={props.materials} application={props.application} selectedBuilding={building} build={this._build} changeMeWork={this._changeMeWork}/>
     )
   }
 
@@ -55,14 +69,14 @@ class Main extends Component {
       let keys = []
       let re = pathToRegexp(r, keys)
       let test = re.exec(route)
-      if (test && test.length > max) {
+      if (test !== null && test.length > max) {
         max = test.length
         best = f
         bestParams = test.slice(1)
       }
     })
     if (best === null) {
-      return this.buildingOverview(null)
+      return this.production(null)
     }
     if (bestParams && bestParams.length > 0) {
       return best(...bestParams)
@@ -72,55 +86,58 @@ class Main extends Component {
   }
 
   render() {
-    const {dispatch, materials, buildings, inhabitants, houses, app, me, application, route} = this.props;
-    let content = this.parseRoute(route)
+    const {dispatch, materials, app, application, route, inhabitants} = this.props;
+    let content = this.parseRoute(route);
+    if(app.settings.fastForwarded > 0){
+      let millisSince = new Date().getTime()-app.settings.fastForwarded*1000
+      swal(`Fast forwarding from your last visit: ${moment(millisSince).fromNow(true)}`)
+    }
     return (
-      <div className="container">
-        <Sidebar app={app} materials={materials} onSave={() => {
-          this.props
+      <div>
+        <Navbar navigate={this.navigate} currentController={this.currentController}
+          app={app} materials={materials} onSave={(e) => {
+            e.preventDefault();
+            this.props
             .application
             .save()
-        }} onPause={() => {
+            swal({
+              title: "Saved!",
+              type: 'success',
+              timer: 1000
+            });
+        }} onPause={(e) => {
+          e.preventDefault();
           let paused = true;
           if (app.settings && app.settings.paused !== undefined) {
             paused = !app.settings.paused
           }
           dispatch(changeSetting('paused', paused))
         }} onWipe={() => {
-          if(window.confirm("Are you sure? This cannot be undone!")) {
+          swal({
+            title: "Are you sure?",
+            text: "Are you sure? This cannot be undone!",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: false
+          }, function(){
             application.wipe()
             window.location.reload()
-          }
+          });
         }}
         />
-        <div className="content">
-          <StatusBar inhabitants={inhabitants}/>
-          <div className="content-container">
-            {content}
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-md-3">
+              <Overview materials={materials} inhabitants={inhabitants} navigate={this.navigate}/>
+            </div>
+            <div className="col-md-9">
+                {content}
+            </div>
           </div>
+          <ReactTooltip/>
         </div>
-        <ReactTooltip/>
       </div>
-
     )
-  }
-
-  _build(building) {
-    if (building.canBuild(this.props.materials) === true) {
-      _.each(building.getCosts(), (cost) => {
-        this.props
-          .dispatch(decreaseMaterial(cost.type, cost.amount))
-      })
-      let toCall = null
-      if(building.constructor.name === 'Building'){
-        toCall = increaseBuildingCount
-      }
-      else{
-        toCall = changeHouseCount
-      }
-      this.props
-        .dispatch(toCall(building.type, 1))
-    }
   }
 
   _changeMeWork(building) {

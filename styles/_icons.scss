@@ -1,0 +1,43 @@
+.icon {
+  &:before {
+    content: '';
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    background-size: 16px 16px;
+  }
+
+  &.big:before {
+    background-size: 32px 32px !important;
+    height: 32px !important;
+    width: 32px !important;
+  }
+  &.small:before {
+    background-size: 12px 12px !important;
+    height: 12px !important;
+    width: 12px !important;
+  }
+  &.wood:before {
+    background-image: url('../images/icons/wood.png');
+  }
+  &.stone:before {
+    background-image: url('../images/icons/stone.png');
+  }
+  &.fish:before {
+    background-image: url('../images/icons/fish.png');
+  }
+  &.gold:before {
+    background-image: url('../images/icons/gold.png');
+  }
+
+  // building
+  &.fisherman:before {
+    background-image: url('../images/icons/fisherman.png');
+  }
+  &.lumberjack:before {
+    background-image: url('../images/icons/lumberjack.png');
+  }
+  &.stonemason:before {
+    background-image: url('../images/icons/stonemason.png');
+  }
+}

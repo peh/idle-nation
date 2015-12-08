@@ -1,0 +1,47 @@
+@import "variables";
+.build {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  .link-list {
+    display: flex;
+    flex-direction: column;
+    align-content: stretch;
+    border-right: 1px solid @navbar-border;
+    a {
+      line-height: 2em;
+      text-decoration: none;
+      color: #000;
+      padding: 5px 10px;
+
+      // text-align: center;
+      border-bottom: 1px solid @navbar-border;
+      &:hover {
+        background-color: @navbar-tab-inactive-background;
+      }
+      &.active {
+        background-color: darken(@navbar-tab-inactive-background, 5%);
+      }
+    }
+  }
+  .type-list {
+    flex: 1;
+  }
+  .build-list {
+    flex: 2;
+    a {
+      color: #aaa;
+      &.buildable {
+        color: #000;
+      }
+    }
+  }
+  .info-view {
+    flex: 6;
+    padding: 0 10px;
+    button {
+      margin: 0 5px;
+    }
+  }
+}

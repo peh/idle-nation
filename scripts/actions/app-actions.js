@@ -8,6 +8,14 @@ export function changeSetting(k, v) {
 }
 
 
+export function updateLastTick(lastTick) {
+  let command = {lastTick: lastTick}
+  return {
+    type: 'UPDATE_LAST_TICK',
+    command
+  }
+}
+
 export function changeRoute(route) {
   return {
     type: 'CHANGE_ROUTE',

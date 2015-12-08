@@ -12,7 +12,7 @@ module.exports = {
       amount: 50
     }, {
       type: 'gold',
-      amount: 50
+      amount: 10
     }]
   },
   "fisherman": {

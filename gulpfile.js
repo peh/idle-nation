@@ -1,7 +1,7 @@
 'use strict';
 
 var gulp = require('gulp'),
-  less = require('gulp-less'),
+  sass = require('gulp-sass'),
   csso = require('gulp-csso'),
   ghPages = require('gulp-gh-pages'),
   autoprefixer = require('gulp-autoprefixer'),
@@ -25,6 +25,7 @@ var gulp = require('gulp'),
   p = {
     jsx: 'scripts/index.js',
     less: 'styles/main.less',
+    scss: 'styles/main.scss',
     faFont: 'node_modules/font-awesome/fonts/**',
     bundle: 'index.js',
     distJs: 'dist/js',
@@ -92,9 +93,8 @@ gulp.task('browserify', function() {
 });
 
 gulp.task('styles', function() {
-  return gulp.src(p.less)
-    .pipe(less())
-    .on('error', notify.onError())
+  return gulp.src(p.scss)
+    .pipe(sass().on('error', notify.onError()))
     .pipe(autoprefixer('last 1 version'))
     .pipe(csso())
     .pipe(gulp.dest(p.distCss))
@@ -118,7 +118,7 @@ gulp.task('watchImages', function() {
 })
 
 gulp.task('watchTask', function() {
-  gulp.watch("styles/**/*.less", ['styles']);
+  gulp.watch("styles/**/*.scss", ['styles']);
 });
 
 gulp.task('watch', ['clean'], function() {

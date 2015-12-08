@@ -7,12 +7,21 @@ import Main from './components/main'
 import {createStore} from 'redux';
 import idleNationApp from './reducer';
 import {changeRoute} from './actions/app-actions'
+window.jQuery = require('jquery');
+window.Tether = require('tether');
+require('bootstrap')
 
 class App {
   constructor() {
     this.store = createStore(idleNationApp)
     this.dataStore = new LocalStoreDataStore()
     this.processor = new Processor(this)
+    this.onHistoryChange = this.onHistoryChange.bind(this)
+    window.onpopstate = this.onHistoryChange
+    this.onHistoryChange()
+  }
+
+  onHistoryChange() {
     let path = window.location.hash
     if(path.indexOf('#!') === 0) {
       path = path.substring(2)
@@ -50,7 +59,4 @@ const app = new App()
 window.onload = () => {
   app.init()
   ReactDOM.render(<Provider store={app.store}><Main application={app}/></Provider>, document.getElementById('game-container'));
-}
-window.onunload = () => {
-  app.processor.save()
 }
