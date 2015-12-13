@@ -25,31 +25,31 @@ export default class Inhabitant {
     return this.data.needs
   }
 
-  produce(materials) {
+  produce(materials, modifier = 1) {
     let result = materials
     let gold = materials.get('gold')
     times(this.amount, () => {
-      if (this.singleNeedsFullfilled(result)) {
+      if (this.singleNeedsFullfilled(result, modifier)) {
         each(this.getNeeds(), (need) => {
           let material = result.get(need.type)
-          result = result.set(need.type, new Material(material.type, material.amount-need.amount, material.perTick-need.amount))
+          result = result.set(need.type, new Material(material.type, material.amount-need.amount*modifier, material.perTick-need.amount*modifier))
         })
-        gold = new Material('gold', gold.amount + this.getGoldProduced(), gold.perTick + this.getGoldProduced())
+        gold = new Material('gold', gold.amount + this.getGoldProduced()*modifier, gold.perTick + this.getGoldProduced()*modifier)
       }
 
     })
-    result =result.set('gold', gold)
+    result = result.set('gold', gold)
     return result
   }
 
-  singleNeedsFullfilled(materials) {
+  singleNeedsFullfilled(materials, modifier = 1) {
     let result = true
     each(this.getNeeds(), (need) => {
       if (!result) {
         return
       }
       let material = materials.get(need.type)
-      result = material && material.amount >= need.amount
+      result = material && material.amount * modifier >= need.amount * modifier
     })
     return result
   }

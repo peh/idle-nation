@@ -22,3 +22,11 @@ export function changeRoute(route) {
     route
   }
 }
+
+export function appAlert(message) {
+  let command = {message: message}
+  return {
+    type: 'ALERT',
+    command
+  }
+}

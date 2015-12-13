@@ -22,33 +22,37 @@ export default class House {
     })
   }
 
-  isVisible(materials){
+  isVisible(materials) {
     return this.amount > 0 || this.canBuild(materials)
   }
 
-  getCosts(){
+  getCosts() {
     return this.data.costs
   }
 
-  getName(){
+  getName() {
     return this.data.name
   }
 
-  canBuild(materials){
+  canBuild(materials) {
     let result = true
-    _.each(this.getCosts(), (cost)=>{
-      let material = _.find(materials, (m)=>{
+    _.each(this.getCosts(), (cost) => {
+      let material = _.find(materials, (m) => {
         return cost.type === m.type
       })
-      if(!material || material.amount < cost.amount) {
+      if (!material || material.amount < cost.amount) {
         result = false
       }
     })
     return result
   }
 
-  getHosts(){
+  getHosts() {
     return this.data.hosts
+  }
+
+  getInfo() {
+    return this.data.info
   }
 
   build(dispatch, materials) {
@@ -61,10 +65,10 @@ export default class House {
   }
 
   sell(dispatch) {
-    if(this.amount > 0) {
+    if (this.amount > 0) {
       dispatch(changeHouseCount(this.type, -1))
       _.each(this.getCosts(), (cost) => {
-        dispatch(increaseMaterial(cost.type, (cost.amount*GAME_DATA.sellFactor)))
+        dispatch(increaseMaterial(cost.type, (cost.amount * GAME_DATA.sellFactor)))
       })
     }
   }

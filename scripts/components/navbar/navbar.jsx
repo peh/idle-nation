@@ -1,8 +1,9 @@
 import React from "react"
 import Tab from "./tab.jsx"
 import {map} from "lodash"
+const cx = require('classnames')
 
-const routes = [
+const BUILD_ROUTES = [
   {
     controller: 'production',
     route: "/production",
@@ -14,9 +15,27 @@ const routes = [
     text: 'Housing'
   },
   {
+    controller: 'service',
+    route: "/service",
+    text: 'Service'
+  },
+  {
     controller: 'science',
     route: "/science",
     text: 'Science'
+  },
+]
+
+const MAIN_ROUTES = [
+  {
+    controller: 'research',
+    route: "/research",
+    text: 'Research'
+  },
+  {
+    controller: 'nation',
+    route: "/nation",
+    text: 'Nation'
   },
 ]
 
@@ -29,20 +48,34 @@ export default class Navbar extends React.Component {
       pauseText = 'Continue'
     }
 
-    let tabs = map(routes, (route) => {
+    let isBuildController = false;
+    let buildRows = map(BUILD_ROUTES, (route) => {
+      if(!isBuildController) {
+        isBuildController = route.controller === currentController;
+      }
       return (
-        <Tab navigate={navigate} key={`tab-${route.controller}`} currentController={currentController} route={route}/>
+        <NavLink key={`dd-item-${route.route}`} navigate={navigate} currentController={currentController} route={route} />
+      )
+    });
+
+    let ddClasses = cx('nav-item', 'dropdown', {'active': isBuildController});
+    let mainRows = map(MAIN_ROUTES, (route) => {
+      return (
+        <Tab key={`dd-item-${route.route}`} navigate={navigate} currentController={currentController} route={route} />
       )
     });
     return (
-      <nav className="navbar navbar-light bg-faded">
+      <nav className="navbar navbar-dark bg-inverse">
         <a className="navbar-brand" href="#">IdleNation</a>
-        <button className="navbar-toggler hidden-md-up" type="button" data-toggle="collapse" data-target="#navbar-collapse">
-          &#9776;
-        </button>
         <div className="collapse navbar-toggleable-md" id="navbar-collapse">
           <ul className="nav navbar-nav">
-            {tabs}
+            <li className={ddClasses}>
+              <a className="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Build</a>
+              <div className="dropdown-menu">
+                {buildRows}
+              </div>
+            </li>
+            {mainRows}
           </ul>
           <ul className="nav navbar-nav pull-right">
             <li className="nav-item">
@@ -74,5 +107,20 @@ export default class Navbar extends React.Component {
         </div>
       </nav>
     )
+  }
+}
+
+class NavLink extends React.Component {
+  render() {
+    const {currentController, navigate, route } = this.props;
+    let classes = cx('dropdown-item', {
+      active: route.controller === currentController
+    });
+    return <a href="#" className={classes} onClick={(e) => {
+      e.preventDefault();
+      navigate(route.route)
+    }}>
+      {route.text}
+    </a>
   }
 }

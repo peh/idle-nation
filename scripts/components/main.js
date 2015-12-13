@@ -9,11 +9,13 @@ import Production from "./production/production.jsx"
 import Housing from "./production/housing.jsx"
 const pathToRegexp = require('path-to-regexp')
 import * as _ from 'lodash'
-import {changeSetting} from '../actions/app-actions'
+import {changeSetting, appAlert} from '../actions/app-actions'
 import {changeWorkplace} from '../actions/me-actions'
 import ReactTooltip from 'react-tooltip'
 const moment = require('moment')
 const swal = require('sweetalert')
+const cx = require('classnames')
+import Modal from 'react-awesome-modal';
 
 let Immutable = require('immutable')
 
@@ -88,10 +90,34 @@ class Main extends Component {
   render() {
     const {dispatch, materials, app, application, route, inhabitants} = this.props;
     let content = this.parseRoute(route);
-    if(app.settings.fastForwarded > 0){
-      let millisSince = new Date().getTime()-app.settings.fastForwarded*1000
-      swal(`Fast forwarding from your last visit: ${moment(millisSince).fromNow(true)}`)
+    let modal = ""
+    if(app.settings && app.settings.fastForward > 0){
+      let millisSince = new Date().getTime()-app.settings.fastForward
+      let done = app.settings.fastForwardDone || 0
+      modal = <Modal visible={true}>
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-md-12">
+              <h3>FastForwarding</h3>
+              <span>Calculating progress since your last visit {moment(millisSince).fromNow()}.</span>
+                <progress className="progress" value={done} max="10">{done}%</progress>
+            </div>
+          </div>
+        </div>
+      </Modal>
     }
+    let alert = ""
+    if(app.alert) {
+      let appAlertClasses = cx('alert', 'alert-danger', 'app-alert', 'alert-dismissible', 'fade', 'in',{'invisible': !app.alert})
+      alert = (<div className={appAlertClasses}>{app.alert.message}
+        <button type="button" className="close" data-dismiss="alert" aria-label="Close" onClick={()=>{
+            dispatch(appAlert(null));
+          }}>
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>)
+    }
+
     return (
       <div>
         <Navbar navigate={this.navigate} currentController={this.currentController}
@@ -103,7 +129,7 @@ class Main extends Component {
             swal({
               title: "Saved!",
               type: 'success',
-              timer: 1000
+              timer: 5000
             });
         }} onPause={(e) => {
           e.preventDefault();
@@ -126,6 +152,7 @@ class Main extends Component {
         }}
         />
         <div className="container-fluid">
+          {modal}
           <div className="row">
             <div className="col-md-3">
               <Overview materials={materials} inhabitants={inhabitants} navigate={this.navigate}/>
@@ -136,6 +163,7 @@ class Main extends Component {
           </div>
           <ReactTooltip/>
         </div>
+        {alert}
       </div>
     )
   }

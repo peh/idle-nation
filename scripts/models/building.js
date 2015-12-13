@@ -42,6 +42,10 @@ export default class Building {
     return this._data.costs || []
   }
 
+  getInfo() {
+    return this._data.info || ""
+  }
+
   getName() {
     return this._data.name
   }

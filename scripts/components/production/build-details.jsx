@@ -7,7 +7,7 @@ import * as INHABITANT_DATA from '../../data/inhabitant-data'
 import * as MATERIAL_DATA from '../../data/material-data'
 import House from '../../models/house'
 import Building from '../../models/building'
-
+import Icon from '../common/icon.jsx'
 
 
 export default class BuildDetails extends React.Component {
@@ -32,23 +32,27 @@ export default class BuildDetails extends React.Component {
     let providesRows = []
     let costsRows = []
     let workHereButton = (<div></div>)
-    let providesText = ""
+    let providesText = "Provides"
     _.each(building.getCosts(), (product)=>{
       let data = MATERIAL_DATA[product.type]
       let material = _.find(materials, (m) => {
         return m.type === product.type
       })
-      let typeClass = cx("small-icon", product.type)
-      let amountClass = cx({danger: material.amount < product.amount})
-
-      costsRows.push(<dt className={typeClass} key={`costs-type-${product.type}`}>{data.name}</dt>)
-      costsRows.push(<dd className={amountClass} key={`costs-amount-${product.type}`}>{product.amount} ({material.amount})</dd>)
+      let rowClass = cx({"table-danger": material.amount < product.amount})
+      costsRows.push(
+        <tr key={`costs-type-${product.type}`} className={rowClass}>
+          <td><Icon icon={product.type}/> &nbsp;{data.name}</td>
+          <td>{product.amount} ({material.amount})</td>
+        </tr>
+      )
     })
 
     if(buildingType === 'Building'){
       _.each(building.getProduces(), (product) => {
-        providesRows.push(<dt key={`provides-type-${product.type}`}>{product.type}</dt>)
-        providesRows.push(<dd key={`provides-amount-${product.type}`}>{product.amount}</dd>)
+        providesRows.push(<tr key={`provides-${product.type}`}>
+          <td><Icon icon={product.type}/> {product.type}</td>
+          <td>{product.amount}/s</td>
+        </tr>)
       })
 
       if (building.amount > 0) {
@@ -69,14 +73,18 @@ export default class BuildDetails extends React.Component {
       _.each(building.getHosts(), (host) => {
         let d = INHABITANT_DATA[host.type]
         if(d !== undefined) {
-          providesRows.push(<dt key={`hosts-type-${host.type}`}>{d.name}</dt>)
-          providesRows.push(<dd key={`hosts-amount-${host.type}`}>{host.amount}</dd>)
+          providesRows.push(
+            <tr key={`hosts-${host.type}`}>
+              <td>{d.name}</td>
+              <td>{host.amount}</td>
+            </tr>)
         }
       })
     }
     return (
       <div className="info">
         <h3 className={headerClasses}>{building.getName()}</h3>
+        <p>{building.getInfo()}</p>
         <div className="btn-group">
           <button className="btn btn-secondary" disabled={!building.canBuild(materials)} onClick={() => {
             building.build(dispatch, materials)
@@ -99,20 +107,18 @@ export default class BuildDetails extends React.Component {
           }}>Sell</button>
           {workHereButton}
         </div>
-        <dl>
-          <dt>Costs</dt>
-          <dd>
-            <dl className="dl-horizontal">
-              {costsRows}
-            </dl>
-          </dd>
-          <dt>{providesText}</dt>
-          <dd>
-            <dl className="dl-horizontal">
-              {providesRows}
-            </dl>
-          </dd>
-        </dl>
+        <h5>Costs</h5>
+        <table className="table table-xs">
+          <tbody>
+            {costsRows}
+          </tbody>
+        </table>
+        <h5>{providesText}</h5>
+        <table className="table table-xs">
+          <tbody>
+            {providesRows}
+          </tbody>
+        </table>
       </div>
     )
   }

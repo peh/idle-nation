@@ -139,6 +139,8 @@ function appReducer(action, appState = {}) {
     newState = newState.set('settings', settings)
   } else if(action.type === 'UPDATE_LAST_TICK') {
     newState = newState.set('lastTick', {lastTick: action.command.lastTick})
+  } else if(action.type === 'ALERT') {
+    newState = newState.set('alert', {message: action.command.message})
   }
   return newState.toJSON()
 }

@@ -2,7 +2,6 @@ import * as _ from 'lodash'
 import {
   addMaterial,
   updateMaterial,
-  decreaseMaterial
 }
 from './actions/material-actions'
 
@@ -17,7 +16,8 @@ import {
 from './actions/inhabitant-actions'
 import {
   changeSetting,
-  updateLastTick
+  updateLastTick,
+  appAlert
 }
 from './actions/app-actions'
 import {
@@ -36,12 +36,15 @@ import * as INHABITANT_DATA from './data/inhabitant-data.js'
 import * as HOUSE_DATA from './data/house-data.js'
 import * as GAME_DATA from './data/game-data.js'
 import Material from './models/material'
+
 export default class Processor {
   constructor(app) {
     this._tickInterval = -1
     this._autosaveInterval = -1
     this.app = app
     this._init()
+    setTimeout(this._fastForward.bind(this), 1000);
+
   }
 
   _init() {
@@ -54,6 +57,7 @@ export default class Processor {
         }
       })
     this._initApp(fromStore.app)
+    this._initMe(fromStore.me)
     // check that data for each buiding is present
     let currentBuildings = Immutable.fromJS(this.app.store.getState().buildings || {})
     let currentInhabitants = Immutable.fromJS(this.app.store.getState().inhabitants || {})
@@ -156,6 +160,9 @@ export default class Processor {
   }
 
   _initApp(data) {
+    if(!data) {
+      return
+    }
     if(data.lastTick) {
       this._dispatch(updateLastTick(data.lastTick.lastTick))
     }
@@ -164,10 +171,12 @@ export default class Processor {
     })
   }
 
-  _init_me(data) {
-    // TODO: refactor to not only be able to handle workplace but more stuff we might store in "Me"
-    if (data && data.length > 0) {
-      this._dispatch(changeWorkplace(data[0].type))
+  _initMe(data) {
+
+    if (data && data.workplace) {
+      this._dispatch(changeWorkplace(data.workplace.type))
+    } else {
+      this._dispatch(appAlert("You are not working anywhere. Choose a place to Work to boost production on that building."))
     }
   }
 
@@ -177,8 +186,42 @@ export default class Processor {
     })
   }
 
-  _run() {
+  _fastForward() {
+    console.log("fastforward check")
+    let app = this._getState().app
+    let lastTick = app.lastTick
+    if(lastTick !== undefined) {
+      lastTick = lastTick.lastTick
+    }
+    const now = new Date().getTime()
+    if(now - lastTick > 30000){
+      let millisToFF = now-lastTick
 
+      let done = 0;
+      let promises = []
+      let workers = 10
+      let ticksPerPromise = (millisToFF/1000)/workers // dividie seconds to FF by workers
+      _.times(workers, (p)=>{
+          promises.push(new Promise((resolve)=>{
+            setTimeout(()=>{
+              this._tick(false, ticksPerPromise);
+              resolve(true)
+            }, (1000/workers)*p) // yes this is aritficially slowing stuff done. we want the progressbar to do somethign
+          }).then(()=>{
+            done++;
+            this._dispatch(changeSetting("fastForwardDone", done))
+          }));
+      })
+      Promise.all(promises).then(()=>{
+        setTimeout(()=>{
+            this._dispatch(changeSetting("fastForward", null))
+        }, 1000)
+      })
+      this._dispatch(changeSetting("fastForward", millisToFF))
+    }
+  }
+
+  _run() {
 
     let app = this._getState().app
     if (app.settings && app.settings.paused === true) {
@@ -186,29 +229,11 @@ export default class Processor {
       this._dispatch(updateLastTick(new Date().getTime()))
       return
     }
-    let lastTick = app.lastTick
-    if(lastTick !== undefined) {
-      lastTick = lastTick.lastTick
-    }
-    const now = new Date().getTime()
-    if(now - lastTick > 2000){
-      let fastForwarded = 0
-      console.log("FastForwarding in time");
-      while(now - lastTick > 2000) {
-          this._tick()
-          lastTick += 1000
-          fastForwarded++
-      }
-      this._dispatch(changeSetting("fastForwarded", fastForwarded))
-    } else {
-      this._dispatch(changeSetting("fastForwarded", 0))
-    }
-    this._tick()
-    // console.log(`lastTick: ${lastTick.lastTick}`)
+    this._tick(true, 1)
     this._dispatch(updateLastTick(new Date().getTime()))
   }
 
-  _tick() {
+  _tick(includeMe, rounds) {
     let me = this._getState().me
     let buildings = this._getState().buildings
     let houses = this._getState().houses
@@ -225,7 +250,7 @@ export default class Processor {
     }
     _.each(buildings, (building) => {
       if (building.amount > 0) {
-        materials = building.produce(materials)
+        materials = building.produce(materials, rounds)
       }
     })
 
@@ -252,11 +277,11 @@ export default class Processor {
 
     let inhabitants = this._getState().inhabitants
     _.each(inhabitants, (inhabitant) => {
-      materials = inhabitant.produce(materials)
+      materials = inhabitant.produce(materials, rounds)
     })
 
     // add stuff "Me" produces
-    if (me && me.workplace) {
+    if (includeMe && me && me.workplace) {
       let building = _.find(buildings, (b) => {
         return b.type === me.workplace.type
       })
@@ -265,34 +290,6 @@ export default class Processor {
     _.each(materials.toJSON(), (material) => {
       this._dispatch(updateMaterial(material))
     })
-  }
-
-
-  _produce(building, perTick) {
-    let produced = {}
-    _.each(building.getNeeds(), (material) => {
-      this._dispatch(decreaseMaterial(material.type, material.amount))
-      perTick[material.type] = (perTick[material.type] || 0) - material.amount
-    })
-    _.each(building.getProduces(), (material) => {
-      produced[material.type] = (produced[material.type] || 0) + material.amount
-      perTick[material.type] = (perTick[material.type] || 0) + material.amount
-    })
-    return produced
-  }
-
-  _checkNeeds(hasNeeds) {
-    let result = true
-    _.each(hasNeeds.getNeeds(), (needed) => {
-      let material = _.find(this._getMaterials(), (m) => {
-        return m.type === needed.type
-      })
-      if (!material || material.amount < needed.amount) {
-        result = false
-      }
-    })
-
-    return result
   }
 
   _getState() {
